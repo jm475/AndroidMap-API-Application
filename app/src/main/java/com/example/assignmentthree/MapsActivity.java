@@ -3,12 +3,14 @@ package com.example.assignmentthree;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationRequest;
@@ -17,12 +19,15 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.provider.SyncStateContract;
 import android.view.View;
+import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.internal.Constants;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
+import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,12 +39,23 @@ import com.example.assignmentthree.databinding.ActivityMapsBinding;
 import com.google.android.gms.tasks.CancellationToken;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.OnTokenCanceledListener;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
+
+
+import java.util.Arrays;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
     FusedLocationProviderClient fusedLocationClient;
+    SearchView searchview;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +75,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Check to see if permissions are granted
         checkPermissions();
+
+        Places.initialize(getApplicationContext(), "AIzaSyA5pUxD_2Xi1s-bga4itPVaq-VblEHmxg8");
+
+        PlacesClient placesClient = Places.createClient(this);
+
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        autocompleteFragment.setCountries("NZ");
+
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.NAME, Place.Field.LAT_LNG));
+
+
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                LatLng placeLatLng = place.getLatLng();
+                //mMap.addMarker(new MarkerOptions().position(placeLatLng).title("Marker Test"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
+            }
+
+            @Override
+            public void onError(Status status) {
+                //Toast.makeText(getApplicationContext(), status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
     }
 
@@ -140,10 +183,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             Toast.makeText(getApplicationContext(), lat + " " + lon, Toast.LENGTH_SHORT).show();
 
 
-                            //Add a marker at last known location and move the camera
-                            LatLng lastLocation = new LatLng(lat, lon);
-                            mMap.addMarker(new MarkerOptions().position(lastLocation).title("Marker Test"));
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 11));
+                            //Add a marker at current location and move the camera
+                            LatLng currentLocation = new LatLng(lat, lon);
+                            mMap.addMarker(new MarkerOptions().position(currentLocation).title("Marker Test"));
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 11));
                         }
                         else {
                         // Handle a location not being found
