@@ -4,38 +4,28 @@ import androidx.activity.result.ActivityResultLauncher;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.location.LocationRequest;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
-import android.widget.SearchView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.CurrentLocationRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -47,23 +37,18 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.assignmentthree.databinding.ActivityMapsBinding;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
-import com.google.gson.JsonObject;
 
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.HttpURLConnection;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -146,6 +131,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 placeLatLng = place.getLatLng();
                 getWeatherPin();
                 getCameraPin();
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
             }
 
             @Override
@@ -153,6 +139,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.makeText(getApplicationContext(), status.getStatusMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+
+
+
 
     }
 
@@ -178,7 +167,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .position(placeLatLng)
                             .title("Weather")
                             .icon(BitmapDescriptorFactory.fromResource(test)));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
+                    //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
                 } catch (JSONException e) {
                     Log.d("error", e.toString());
                 }
@@ -217,26 +206,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     for(int i = 0; i < jsonArray.length(); i++){
 
                         //Get the JSONObject at index i
-                        JSONObject weatherObject = jsonArray.getJSONObject(i);
+                        JSONObject JSONWebcams = jsonArray.getJSONObject(i);
 
-                        //Get the location details for the
-                        JSONObject weatherObject2 = weatherObject.getJSONObject("location");
+                        //Split the array to get location and image details
+                        JSONObject jsonLocation = JSONWebcams.getJSONObject("location");
+                        JSONObject jsonImage = JSONWebcams.getJSONObject("image");
+                        JSONObject jsonCurrent = jsonImage.getJSONObject("current");
 
-                        Log.d("response", weatherObject.getString("title"));
+                        //Log.d("response", weatherObject.getString("title"));
+                        //Log.d("response2", weatherObject4.getString("preview"));
 
                         //Get the resource ID to be used
                         int test = getResources().getIdentifier("camera", "drawable", getPackageName());
+
                         //Get the latitude and longitude to be used
-                        double lat2 = weatherObject2.getDouble("latitude");
-                        double lon2 = weatherObject2.getDouble("longitude");
+                        double lat2 = jsonLocation.getDouble("latitude");
+                        double lon2 = jsonLocation.getDouble("longitude");
                         LatLng latLng2 = new LatLng(lat2,lon2);
 
-                        //Add a marker to the maps
-                        mMap.addMarker(new MarkerOptions()
+                        //Get the location string
+                        String location = jsonLocation.getString("city") + ", " + jsonLocation.getString("region");
+
+                        //Add a marker to the map
+                        Marker marker = mMap.addMarker(new MarkerOptions()
                                 .position(latLng2)
-                                .title("Camera " + weatherObject.getString("title"))
+                                .title(JSONWebcams.getString("title"))
+                                .snippet(location)
                                 .icon(BitmapDescriptorFactory.fromResource(test)));
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
+                        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
+
+                        //Add the image to the marker
+                        marker.setTag(jsonCurrent.getString("thumbnail"));
+
+
 
                     }
 
@@ -275,6 +277,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         checkPermissions();
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(@NonNull Marker marker) {
+
+                if(marker.getSnippet() != null){
+                    Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
+                    intent.putExtra("markerTitle", marker.getTitle());
+                    intent.putExtra("markerSnippet", marker.getSnippet());
+                    intent.putExtra("markerImage", (String) marker.getTag());
+                    startActivity(intent);
+                }
+                return false;
+            }
+        });
     }
 
 
