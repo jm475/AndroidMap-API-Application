@@ -8,14 +8,22 @@
     android:orientation="vertical">
 
 
-        <fragment android:id="@+id/autocomplete_fragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
-            android:layout_weight="9"/>
+
+    <!--This XML layout will be the default layout when the app is launched.
+    It contains two fragments (in order of appearance)
+    An autocomplete fragment that allows the user to search for locations to choose from
+    A map fragment to display locations and add markers on-->
+
+    <fragment
+        android:id="@+id/autocomplete_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+        android:layout_weight="9"/>
 
 
-        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    <fragment
+        xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/map"

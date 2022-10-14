@@ -8,6 +8,13 @@
     android:orientation="vertical">
 
 
+    <!--This XML layout will consist of (in order of appearance)
+    A TextView to display the webcam's title
+    A TextView to display  the webcam's city and region
+    View to fill space
+    ImageView to display webcam's thumbnail image
+    View to fill space-->
+
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="match_parent"
@@ -42,11 +49,5 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.7"/>
-
-
-
-
-
-
 
 </LinearLayout>

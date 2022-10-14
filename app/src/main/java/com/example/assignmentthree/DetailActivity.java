@@ -16,6 +16,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+
+/**
+ * DetailActivity class that displays thumbnail of the webcam image and various details
+ */
 public class DetailActivity extends AppCompatActivity {
 
     @Override

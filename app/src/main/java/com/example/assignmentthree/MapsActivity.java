@@ -51,8 +51,15 @@ import org.json.JSONObject;
 import java.util.Arrays;
 import java.util.Locale;
 
+
+
+ /**
+  * MapsActivity class that displays an interactive map and a search bar.
+  * also used as default activity when app is first launched
+  */
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    //Launcher to ask for location permissions
     ActivityResultLauncher<String[]> locationPermissionRequest =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
@@ -72,6 +79,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
             );
 
+    //Initialise global variables
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
     FusedLocationProviderClient fusedLocationClient;
@@ -79,16 +87,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     double lon;
     LatLng placeLatLng;
     private RequestQueue queue;
-    private String weatherIcon;
-
-
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         //Hide the navigation bar by enabling Immersive Sticky mode
         int uiOptionsSticky = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
@@ -118,10 +121,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Make sure our autocomplete returns only names and lat/lng
         autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.NAME, Place.Field.LAT_LNG));
 
-
+        //Instantiate the RequestQueue
         queue = Volley.newRequestQueue(this);
 
-        //Listener to see if a location has been clicked
+        //Listener to see if a location has been clicked.
+        //Once location has been clicked, calls methods to add pins and move the camera to the selected location
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -139,12 +143,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.makeText(getApplicationContext(), status.getStatusMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-
-
-
-
     }
 
+
+     /**
+      * Method that creates a JSONObject request given a url with latitude and longitude coordinates
+      * Retrieves data surrounding weather information and uses the data to add markers onto the map
+      */
     private void getWeatherPin(){
         String url = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&appid=1a06e7f638260a986797aff2e5bb52af";
         // Request a object response from the provided URL.
@@ -154,26 +159,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 try {
                     //Get a JSONArray from response object
                     JSONArray jsonArray = response.getJSONArray("weather");
-//                    for(int i = 0; i < jsonArray.length(); i++){
-//                        JSONObject weatherArray = jsonArray.getJSONObject(i);
-//                        String weatherValue = weatherArray.getString("main").toLowerCase(Locale.ROOT);
-//                    }
+
                     //Get the object that is at index 0 in our JSONArray
                     JSONObject weatherArray = jsonArray.getJSONObject(0);
 
                     //Get the resource ID to be used
                     int test = getResources().getIdentifier(weatherArray.getString("main").toLowerCase(Locale.ROOT), "drawable", getPackageName());
+
+                    //Add a marker to the map with data
                     mMap.addMarker(new MarkerOptions()
                             .position(placeLatLng)
                             .title("Weather")
                             .icon(BitmapDescriptorFactory.fromResource(test)));
-                    //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
+
                 } catch (JSONException e) {
                     Log.d("error", e.toString());
                 }
-
             }
-
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
@@ -183,16 +185,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         queue.add(objectRequest);
     }
 
+     /**
+      * Method that creates a JSONObject request given a url with latitude and longitude coordinates
+      * Retrieves data surrounding web cameras and uses the data to add markers onto the map
+      */
     public void getCameraPin(){
-        //REMEMBER USE &KEY
-        String urlImages = "https://api.windy.com/api/webcams/v2/list/limit=5/nearby=-37,175,100?show=webcams:image&key=qkz8BHlYJaxtU9sZfmLNSo2sJr8y3r6R";
+        String url = "https://api.windy.com/api/webcams/v2/list/limit=5/nearby=" + lat + "," + lon + ",100" + "?show=webcams:image,location&key=qkz8BHlYJaxtU9sZfmLNSo2sJr8y3r6R";
 
-        String urlLocation = "https://api.windy.com/api/webcams/v2/list/limit=5/nearby=" + lat + "," + lon + ",100" + "?show=webcams:image,location&key=qkz8BHlYJaxtU9sZfmLNSo2sJr8y3r6R";
-
-        // USE THIS WEBSITE TO COMPARE https://www.windy.com/?-48.225,-174.023,4,m:cCqakXS
-        //ORIGINAL URLLOCATION https://api.windy.com/api/webcams/v2/list/limit=5/nearby=-37.792,175.174,100?show=webcams:location&key=qkz8BHlYJaxtU9sZfmLNSo2sJr8y3r6R
-        // Request a object response from the provided URL.
-        JsonObjectRequest objectRequest = new JsonObjectRequest(Request.Method.GET, urlLocation, null, new Response.Listener<JSONObject>() {
+        //Request a object response from the provided URL.
+        JsonObjectRequest objectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
@@ -202,10 +203,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     //Get a JSONarray from the JSONObject
                     JSONArray jsonArray = jsonObject.getJSONArray("webcams");
 
-
                     for(int i = 0; i < jsonArray.length(); i++){
-
-                        //Get the JSONObject at index i
                         JSONObject JSONWebcams = jsonArray.getJSONObject(i);
 
                         //Split the array to get location and image details
@@ -213,42 +211,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         JSONObject jsonImage = JSONWebcams.getJSONObject("image");
                         JSONObject jsonCurrent = jsonImage.getJSONObject("current");
 
-                        //Log.d("response", weatherObject.getString("title"));
-                        //Log.d("response2", weatherObject4.getString("preview"));
-
-                        //Get the resource ID to be used
+                        //Get the resource ID icon to be used
                         int test = getResources().getIdentifier("camera", "drawable", getPackageName());
 
                         //Get the latitude and longitude to be used
-                        double lat2 = jsonLocation.getDouble("latitude");
-                        double lon2 = jsonLocation.getDouble("longitude");
-                        LatLng latLng2 = new LatLng(lat2,lon2);
+                        double latCamera = jsonLocation.getDouble("latitude");
+                        double lonCamera = jsonLocation.getDouble("longitude");
+                        LatLng latLngCamera = new LatLng(latCamera,lonCamera);
 
                         //Get the location string
                         String location = jsonLocation.getString("city") + ", " + jsonLocation.getString("region");
 
-                        //Add a marker to the map
+                        //Add a marker to the map with data
                         Marker marker = mMap.addMarker(new MarkerOptions()
-                                .position(latLng2)
+                                .position(latLngCamera)
                                 .title(JSONWebcams.getString("title"))
                                 .snippet(location)
                                 .icon(BitmapDescriptorFactory.fromResource(test)));
-                        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(placeLatLng, 11));
 
                         //Add the image to the marker
                         marker.setTag(jsonCurrent.getString("thumbnail"));
-
-
-
                     }
-
-
                 } catch (JSONException e) {
                     Log.d("error", e.toString());
                 }
-
             }
-
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
@@ -256,14 +243,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         queue.add(objectRequest);
-
     }
 
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
+     * This is where we can add markers or lines, add listeners or move the camera.
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
@@ -272,21 +257,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        //Check for permissions
         checkPermissions();
 
+        //Listener to see if a marker has been clicked.
+        //Once a marker has been clicked, checks to see if it is a Camera Pin.
+        //Then starts a new intent if marker is a Camera Pin
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(@NonNull Marker marker) {
-
+                //If the marker clicked is a Camera Pin
                 if(marker.getSnippet() != null){
+                    //Create intent and add extra data
                     Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
                     intent.putExtra("markerTitle", marker.getTitle());
                     intent.putExtra("markerSnippet", marker.getSnippet());
                     intent.putExtra("markerImage", (String) marker.getTag());
+                    //Start the intent
                     startActivity(intent);
                 }
                 return false;
@@ -294,23 +281,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-
+     /**
+      * Method that checks if location permissions have been granted.
+      */
     public void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Permissions have not yet been granted
-            // Launch a location permission request
+            //Permissions have not yet been granted
+            //Launch a location permission request
             askForPermission();
         } else {
-            // Permissions have already been granted
-            Toast.makeText(this, "Permission status: already granted", Toast.LENGTH_SHORT).show();
+            //Permissions have already been granted
+            //Toast.makeText(this, "Permission status: already granted", Toast.LENGTH_SHORT).show();
             getCurrentLocation();
         }
 
     }
 
 
-
+     /**
+      * Method that launches a locationPermissionRequest
+      */
     public void askForPermission() {
         // Create a location permission request
         // Launch the location permission request
@@ -318,23 +309,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
         });
-
     }
 
 
+     /**
+      * Method that uses a FusedLocationProviderClient to get the current location of the device
+      * to display on the map
+      */
     public void getCurrentLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         fusedLocationClient.getCurrentLocation(LocationRequest.QUALITY_BALANCED_POWER_ACCURACY, null).addOnSuccessListener(this, new OnSuccessListener<Location>() {
-            //fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
-
                 if (location != null) {
                     // Logic to handle location object
                     double lat = location.getLatitude();
                     double lon = location.getLongitude();
-                    Toast.makeText(getApplicationContext(), lat + " " + lon, Toast.LENGTH_SHORT).show();
 
                     //Add a marker at current location and move the camera
                     LatLng currentLocation = new LatLng(lat, lon);
@@ -342,13 +333,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 11));
 
                 } else {
-                    // Handle a location not being found
+                    //Handle a location not being found
                     Toast.makeText(getApplicationContext(), "Could not find location", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-
     }
+
 
 }
 
