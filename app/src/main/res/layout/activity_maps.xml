@@ -30,9 +30,6 @@
         tools:context=".MapsActivity"
         android:layout_weight="1"/>
 
-
-
-
 </LinearLayout>
 
 
