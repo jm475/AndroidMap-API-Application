@@ -11,6 +11,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationRequest;
 import android.os.Bundle;
@@ -48,7 +50,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -140,7 +144,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onError(Status status) {
-                Toast.makeText(getApplicationContext(), status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+
             }
         });
     }
@@ -169,7 +173,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     //Add a marker to the map with data
                     mMap.addMarker(new MarkerOptions()
                             .position(placeLatLng)
-                            .title("Weather")
+                            .title(weatherArray.getString("main"))
+                            .snippet(weatherArray.getString("description"))
                             .icon(BitmapDescriptorFactory.fromResource(test)));
 
                 } catch (JSONException e) {
@@ -267,7 +272,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public boolean onMarkerClick(@NonNull Marker marker) {
                 //If the marker clicked is a Camera Pin
-                if(marker.getSnippet() != null){
+                if(marker.getTag() != null){
                     //Create intent and add extra data
                     Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
                     intent.putExtra("markerTitle", marker.getTitle());
@@ -327,9 +332,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     double lat = location.getLatitude();
                     double lon = location.getLongitude();
 
+
+                    //Get the locality name of the location
+                    Geocoder geocoder = new Geocoder(MapsActivity.this, Locale.getDefault());
+                    List<Address> addresses = null;
+                    try {
+                        addresses = geocoder.getFromLocation(lat, lon, 1);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    Address obj = addresses.get(0);
+                    String add = obj.getLocality();
+
+
+
+
                     //Add a marker at current location and move the camera
                     LatLng currentLocation = new LatLng(lat, lon);
-                    mMap.addMarker(new MarkerOptions().position(currentLocation).title("Marker Test"));
+                    mMap.addMarker(new MarkerOptions().position(currentLocation).title(add));
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 11));
 
                 } else {
