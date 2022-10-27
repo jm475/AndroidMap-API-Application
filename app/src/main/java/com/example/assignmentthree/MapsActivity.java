@@ -84,13 +84,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             );
 
     //Initialise global variables
-    private GoogleMap mMap;
+    GoogleMap mMap;
     private ActivityMapsBinding binding;
     FusedLocationProviderClient fusedLocationClient;
     double lat;
     double lon;
     LatLng placeLatLng;
     private RequestQueue queue;
+    int markerCount;
+
+
+    public int getMarkerCount(){
+        return markerCount;
+    }
 
 
     @Override
@@ -128,11 +134,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Instantiate the RequestQueue
         queue = Volley.newRequestQueue(this);
 
+
         //Listener to see if a location has been clicked.
         //Once location has been clicked, calls methods to add pins and move the camera to the selected location
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
+                markerCount = 0;
                 mMap.clear();
                 lat = place.getLatLng().latitude;
                 lon = place.getLatLng().longitude;
@@ -168,14 +176,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     JSONObject weatherArray = jsonArray.getJSONObject(0);
 
                     //Get the resource ID to be used
-                    int test = getResources().getIdentifier(weatherArray.getString("main").toLowerCase(Locale.ROOT), "drawable", getPackageName());
+                    int icon = getResources().getIdentifier(weatherArray.getString("main").toLowerCase(Locale.ROOT), "drawable", getPackageName());
 
                     //Add a marker to the map with data
                     mMap.addMarker(new MarkerOptions()
                             .position(placeLatLng)
                             .title(weatherArray.getString("main"))
                             .snippet(weatherArray.getString("description"))
-                            .icon(BitmapDescriptorFactory.fromResource(test)));
+                            .icon(BitmapDescriptorFactory.fromResource(icon)));
+                    markerCount++;
 
                 } catch (JSONException e) {
                     Log.d("error", e.toString());
@@ -188,6 +197,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         queue.add(objectRequest);
+
+
     }
 
      /**
@@ -217,7 +228,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         JSONObject jsonCurrent = jsonImage.getJSONObject("current");
 
                         //Get the resource ID icon to be used
-                        int test = getResources().getIdentifier("camera", "drawable", getPackageName());
+                        int icon = getResources().getIdentifier("camera", "drawable", getPackageName());
 
                         //Get the latitude and longitude to be used
                         double latCamera = jsonLocation.getDouble("latitude");
@@ -232,7 +243,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 .position(latLngCamera)
                                 .title(JSONWebcams.getString("title"))
                                 .snippet(location)
-                                .icon(BitmapDescriptorFactory.fromResource(test)));
+                                .icon(BitmapDescriptorFactory.fromResource(icon)));
+                        markerCount++;
 
                         //Add the image to the marker
                         marker.setTag(jsonCurrent.getString("thumbnail"));
@@ -319,7 +331,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
      /**
       * Method that uses a FusedLocationProviderClient to get the current location of the device
-      * to display on the map
+      * to display on the map.
+      * Also retrieves the name of the current location
       */
     public void getCurrentLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -350,6 +363,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     //Add a marker at current location and move the camera
                     LatLng currentLocation = new LatLng(lat, lon);
                     mMap.addMarker(new MarkerOptions().position(currentLocation).title(add));
+                    markerCount++;
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 11));
 
                 } else {
