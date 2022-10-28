@@ -91,12 +91,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     double lon;
     LatLng placeLatLng;
     private RequestQueue queue;
-    int markerCount;
-
-
-    public int getMarkerCount(){
-        return markerCount;
-    }
 
 
     @Override
@@ -140,7 +134,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                markerCount = 0;
                 mMap.clear();
                 lat = place.getLatLng().latitude;
                 lon = place.getLatLng().longitude;
@@ -184,7 +177,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .title(weatherArray.getString("main"))
                             .snippet(weatherArray.getString("description"))
                             .icon(BitmapDescriptorFactory.fromResource(icon)));
-                    markerCount++;
 
                 } catch (JSONException e) {
                     Log.d("error", e.toString());
@@ -244,7 +236,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 .title(JSONWebcams.getString("title"))
                                 .snippet(location)
                                 .icon(BitmapDescriptorFactory.fromResource(icon)));
-                        markerCount++;
 
                         //Add the image to the marker
                         marker.setTag(jsonCurrent.getString("thumbnail"));
@@ -358,12 +349,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     String add = obj.getLocality();
 
 
-
-
                     //Add a marker at current location and move the camera
                     LatLng currentLocation = new LatLng(lat, lon);
                     mMap.addMarker(new MarkerOptions().position(currentLocation).title(add));
-                    markerCount++;
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 11));
 
                 } else {

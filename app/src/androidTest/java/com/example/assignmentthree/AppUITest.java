@@ -6,13 +6,17 @@ import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.replaceText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withResourceName;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import android.app.Instrumentation;
 import android.view.View;
@@ -94,13 +98,17 @@ public class AppUITest {
         Thread.sleep(1000);
         recyclerView.perform(actionOnItemAtPosition(0, click()));
 
+
         //Click on a marker with the title "Hamilton"
-        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        UiObject marker = device.findObject(new UiSelector().descriptionContains("Hamilton"));
+        UiDevice device2 = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        UiObject marker = device2.findObject(new UiSelector().descriptionContains("Hamilton"));
         Thread.sleep(1000);
         marker.click();
         Thread.sleep(1000);
 
+        onView(withId(R.id.tv_city)).check(matches(not(withText(""))));
+        onView(withId(R.id.tv_title)).check(matches(not(withText(""))));
+        onView(withId(R.id.iv_thumbnail)).check(matches(not(withResourceName(""))));
     }
 
     private static Matcher<View> childAtPosition(

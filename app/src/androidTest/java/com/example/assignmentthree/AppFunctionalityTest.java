@@ -7,7 +7,6 @@ import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition;
-import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
 import static androidx.test.espresso.matcher.ViewMatchers.withResourceName;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -22,7 +21,7 @@ import static org.junit.Assert.*;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.widget.ImageView;
+
 
 import androidx.test.espresso.ViewInteraction;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -60,14 +59,22 @@ public class AppFunctionalityTest {
             new ActivityScenarioRule<>(MapsActivity.class);
 
 
+    /**
+     * Test to check if Views are displayed
+     */
     @Test
     public void checkViewsDisplayed() {
         onView(withId(R.id.autocomplete_fragment)).check(matches(isDisplayed()));
         onView(withId(R.id.map)).check(matches(isDisplayed()));
         onView(withId(R.id.map)).check((isCompletelyBelow(withId(R.id.autocomplete_fragment))));
-
     }
 
+
+    /**
+     * Test to see what happens when a user exits/backs out of the autocompletefragment
+     * @throws UiObjectNotFoundException
+     * @throws InterruptedException
+     */
     @Test
     public void onSearchBarExit() throws UiObjectNotFoundException, InterruptedException {
         ViewInteraction editText = onView(withId(R.id.autocomplete_fragment));
@@ -87,6 +94,11 @@ public class AppFunctionalityTest {
     }
 
 
+    /**
+     * Test to check if a weather marker exists on the map
+     * @throws InterruptedException
+     * @throws UiObjectNotFoundException
+     */
     @Test
     public void checkWeatherMarkerExists() throws InterruptedException, UiObjectNotFoundException {
         mGrantPermissionRule = GrantPermissionRule.grant(
@@ -114,16 +126,17 @@ public class AppFunctionalityTest {
                 return;
             }
         }
-
-
         Thread.sleep(1000);
         marker.click();
         Thread.sleep(1000);
 
-
-
     }
 
+    /**
+     * Test to see if a camera marker exists on the map
+     * @throws InterruptedException
+     * @throws UiObjectNotFoundException
+     */
     @Test
     public void checkCameraMarkerExists() throws InterruptedException, UiObjectNotFoundException {
         searchForHamilton();
@@ -140,7 +153,6 @@ public class AppFunctionalityTest {
             return;
         }
 
-
         Thread.sleep(1000);
         marker.click();
         Thread.sleep(1000);
@@ -148,6 +160,11 @@ public class AppFunctionalityTest {
     }
 
 
+    /**
+     * Test to see what happens when the get directions button is clicked
+     * @throws UiObjectNotFoundException
+     * @throws InterruptedException
+     */
     @Test
     public void checkGetDirections() throws UiObjectNotFoundException, InterruptedException {
         searchForHamilton();
@@ -191,6 +208,11 @@ public class AppFunctionalityTest {
     }
 
 
+    /**
+     * Test to check that the contents of the DetailActivity views aren't empty
+     * @throws InterruptedException
+     * @throws UiObjectNotFoundException
+     */
     @Test
     public void checkDetailActivityContentNotEmpty() throws InterruptedException, UiObjectNotFoundException {
         searchForHamilton();
@@ -216,6 +238,11 @@ public class AppFunctionalityTest {
     }
 
 
+    /**
+     * Test to see if marker exists when permissions are granted
+     * @throws InterruptedException
+     * @throws UiObjectNotFoundException
+     */
     @Test
     public void locationPermissionsGranted() throws InterruptedException, UiObjectNotFoundException {
         mGrantPermissionRule = GrantPermissionRule.grant(
@@ -239,6 +266,11 @@ public class AppFunctionalityTest {
 
     }
 
+    /**
+     * Test to see if marker exists when only coarse permission is granted
+     * @throws InterruptedException
+     * @throws UiObjectNotFoundException
+     */
     @Test
     public void locationPermissionCoarseGranted() throws InterruptedException, UiObjectNotFoundException {
        mGrantPermissionRule = GrantPermissionRule.grant(
@@ -251,6 +283,11 @@ public class AppFunctionalityTest {
         assertFalse(markerExists);
     }
 
+    /**
+     * Test to see if marker exists when permissions are denied
+     * @throws InterruptedException
+     * @throws UiObjectNotFoundException
+     */
     @Test
     public void locationPermissionsDenied() throws InterruptedException, UiObjectNotFoundException {
         UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -322,10 +359,6 @@ public class AppFunctionalityTest {
             }
         };
     }
-
-
-
-
 
 
 }
